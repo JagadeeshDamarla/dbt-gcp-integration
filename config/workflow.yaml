@@ -7,14 +7,13 @@ main:
     - init_variables:
         assign:
           - project_id: ${sys.get_env("GOOGLE_CLOUD_PROJECT_ID")}
-          - region: "us-central1"
-          # This matches the JOB_NAME in your GitHub Actions env block
-          - job_name: "dbt-snowflake-production-job"
+          - region: ${default(map.get(args, "region"), sys.get_env("CLOUD_RUN_REGION"))}
+          - job_name: ${default(map.get(args, "job_name"), sys.get_env("CLOUD_RUN_JOB_NAME"))}
           - notification_template: ${args.notification_template}
           - slack_webhook_secret_resource: ${notification_template.slack_webhook_secret_resource}
           - now_ts: ${sys.now()}
-          - default_from_date: ${text.substring(time.format(now_ts), 0, 10)}
-          - default_to_date: ${text.substring(time.format(now_ts - 86400), 0, 10)}
+          - default_from_date: ${text.substring(time.format(now_ts - 86400), 0, 10)}
+          - default_to_date: ${text.substring(time.format(now_ts), 0, 10)}
           - dbt_from_date: ${default_from_date}
           - dbt_to_date: ${default_to_date}
 

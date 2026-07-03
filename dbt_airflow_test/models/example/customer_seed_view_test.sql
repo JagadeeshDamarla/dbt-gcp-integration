@@ -18,6 +18,6 @@ select
     value_segment,
     is_gold_customer,
     cast('{{ from_date }}' as date) as from_date,
-    cast('{{ to_date }}' as date) as to_date,
+    cast('{{ to_date }}' as date) as to_date
 from {{ ref('customer_seed_view') }}
 where 1 = 1    

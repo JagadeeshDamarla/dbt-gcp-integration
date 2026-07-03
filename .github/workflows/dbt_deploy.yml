@@ -3,24 +3,31 @@ on:
   push:
     branches: [main]
     paths: [
-      'models/**', 
-      'macros/**', 
-      'seeds/**', 
-      'snapshots/**', 
-      'tests/**', 
-      'dbt_project.yml', 
-      'packages.yml', 
-      'profiles.yml', 
-      'Dockerfile'
+      'dbt_airflow_test/models/**', 
+      'dbt_airflow_test/macros/**', 
+      'dbt_airflow_test/seeds/**', 
+      'dbt_airflow_test/snapshots/**', 
+      'dbt_airflow_test/tests/**', 
+      'dbt_airflow_test/dbt_project.yml', 
+      'dbt_airflow_test/packages.yml', 
+      'dbt_airflow_test/profiles.yml', 
+      'dbt_airflow_test/requirements.txt',
+      'dbt_airflow_test/run_dbt_with_log_upload.sh',
+      'dbt_airflow_test/Dockerfile',
+      'config/workflow.yaml',
+      '.github/workflows/dbt_deploy.yml'
     ]
 permissions:
   contents: read
   id-token: write
 env:
-  PROJECT_ID: "new-map-project-1538399427267"
-  REGION: "us-central1"
-  IMAGE_NAME: "dbt-images/dbt-snowflake"
-  JOB_NAME: "dbt-snowflake-production-job"
+  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+  REGION: ${{ vars.GCP_REGION }}
+  IMAGE_NAME: ${{ vars.ARTIFACT_IMAGE_NAME }}
+  JOB_NAME: ${{ vars.CLOUD_RUN_JOB_NAME }}
+  WORKFLOW_NAME: ${{ vars.WORKFLOW_NAME }}
+  WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
+  DEPLOYER_SERVICE_ACCOUNT: ${{ vars.DEPLOYER_SERVICE_ACCOUNT }}
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -29,8 +36,8 @@ jobs:
     - id: auth
       uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: 'projects/YOUR_PROJECT_NUMBER/locations/global/workloadIdentityPools/github-pool/providers/github-provider'
-        service_account: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
+        workload_identity_provider: ${{ env.WIF_PROVIDER }}
+        service_account: ${{ env.DEPLOYER_SERVICE_ACCOUNT }}
     - uses: docker/login-action@v3
       with:
         registry: ${{ env.REGION }}-docker.pkg.dev
@@ -38,7 +45,8 @@ jobs:
         password: ${{ steps.auth.outputs.access_token }}
     - uses: docker/build-push-action@v5
       with:
-        context: .
+        context: ./dbt_airflow_test
+        file: ./dbt_airflow_test/Dockerfile
         push: true
         tags: |
           ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
@@ -47,4 +55,12 @@ jobs:
       run: |
         gcloud run jobs update ${{ env.JOB_NAME }} \
           --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --project=${{ env.PROJECT_ID }} \
           --region=${{ env.REGION }}
+    - name: Deploy Workflow Definition
+      if: ${{ env.WORKFLOW_NAME != '' }}
+      run: |
+        gcloud workflows deploy ${{ env.WORKFLOW_NAME }} \
+          --source=config/workflow.yaml \
+          --location=${{ env.REGION }} \
+          --project=${{ env.PROJECT_ID }}

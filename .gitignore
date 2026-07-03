@@ -3,3 +3,7 @@ target/
 dbt_packages/
 logs/
 dbt_test/*
+.DS_Store
+dbt_airflow_test/target/
+dbt_airflow_test/dbt_packages/
+dbt_airflow_test/logs/

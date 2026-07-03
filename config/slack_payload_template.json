@@ -1,6 +1,6 @@
 {
   "provider": "slack",
-  "slack_webhook_secret_resource": "projects/995265336172/secrets/SLACK_WEBHOOK",
+  "slack_webhook_secret_resource": "projects/PROJECT_NUMBER/secrets/SLACK_WEBHOOK",
   "attributes": {
     "region": "region",
     "operation": "operation",

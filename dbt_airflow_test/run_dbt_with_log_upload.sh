@@ -42,6 +42,11 @@ upload_logs_to_gcs() {
   local execution_id
   local gcs_prefix
 
+  if [ -z "$bucket_name" ]; then
+    echo "DBT_LOG_BUCKET is not set; skipping artifact upload."
+    return 0
+  fi
+
   current_date="$(date -u +%Y-%m-%d)"
   current_hour="$(date -u +%H)"
   timestamp="$(date -u +%Y%m%dT%H%M%SZ)"
