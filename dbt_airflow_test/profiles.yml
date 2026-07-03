@@ -4,11 +4,11 @@ dbt_airflow_test:
   outputs:
     dev:
       type: snowflake
-      account: "{{ env_var('SNOWFLAKE_ACCOUNT') }}"
-      user: "{{ env_var('SNOWFLAKE_USER') }}"
+      account: "BPKRITC-SX65301"
+      user: "dbt_service_user"
       password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
-      role: "{{ env_var('SNOWFLAKE_ROLE') }}"
-      database: "{{ env_var('SNOWFLAKE_DATABASE') }}"
-      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE') }}"
-      schema: "{{ env_var('SNOWFLAKE_SCHEMA') }}"
-      threads: "{{ env_var('DBT_THREADS', '4') | int }}"
+      role: "dbt_role"
+      database: "dbt_test_and_trail"
+      warehouse: "compute_wh"
+      schema: "raw"
+      threads: 4
