@@ -1,22 +1,6 @@
 name: "Build and Deploy dbt Models"
 on:
-  push:
-    branches: [main]
-    paths: [
-      'dbt_airflow_test/models/**', 
-      'dbt_airflow_test/macros/**', 
-      'dbt_airflow_test/seeds/**', 
-      'dbt_airflow_test/snapshots/**', 
-      'dbt_airflow_test/tests/**', 
-      'dbt_airflow_test/dbt_project.yml', 
-      'dbt_airflow_test/packages.yml', 
-      'dbt_airflow_test/profiles.yml', 
-      'dbt_airflow_test/requirements.txt',
-      'dbt_airflow_test/run_dbt_with_log_upload.sh',
-      'dbt_airflow_test/Dockerfile',
-      'config/workflow.yaml',
-      '.github/workflows/dbt_deploy.yml'
-    ]
+  workflow_dispatch:
 permissions:
   contents: read
   id-token: write
