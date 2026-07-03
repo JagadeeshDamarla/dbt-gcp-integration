@@ -10,7 +10,6 @@ env:
   IMAGE_NAME: "dbt_test"
   REPOSITORY: "dbt-images"
   JOB_NAME: "dbt-test-job-c-run"
-  WORKFLOW_NAME: "dbt_test_workflow_new"
   DEPLOYER_SERVICE_ACCOUNT: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
 jobs:
   deploy:
@@ -59,10 +58,3 @@ jobs:
           --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
           --project=${{ env.PROJECT_ID }} \
           --region=${{ env.REGION }}
-    - name: Deploy Workflow Definition
-      if: ${{ env.WORKFLOW_NAME != '' }}
-      run: |
-        gcloud workflows deploy ${{ env.WORKFLOW_NAME }} \
-          --source=config/workflow.yaml \
-          --location=${{ env.REGION }} \
-          --project=${{ env.PROJECT_ID }}
