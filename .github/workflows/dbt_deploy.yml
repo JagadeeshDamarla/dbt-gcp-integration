@@ -48,7 +48,12 @@ jobs:
         tags: |
           ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
           ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
-    - name: Update GCP Cloud Run Job
+    - name: Validate Cloud Run Job Exists
+      run: |
+        gcloud run jobs describe ${{ env.JOB_NAME }} \
+          --project=${{ env.PROJECT_ID }} \
+          --region=${{ env.REGION }}
+    - name: Update GCP Cloud Run Job Image
       run: |
         gcloud run jobs update ${{ env.JOB_NAME }} \
           --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
