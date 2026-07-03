@@ -21,6 +21,7 @@ jobs:
       with:
         workload_identity_provider: 'projects/995265336172/locations/global/workloadIdentityPools/github-dbt-pool/providers/github-dbt-provider'
         service_account: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
+        token_format: 'access_token'
     - uses: docker/login-action@v3
       with:
         registry: ${{ env.REGION }}-docker.pkg.dev
