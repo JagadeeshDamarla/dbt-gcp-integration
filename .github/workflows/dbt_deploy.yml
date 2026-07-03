@@ -5,13 +5,12 @@ permissions:
   contents: read
   id-token: write
 env:
-  PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
-  REGION: ${{ vars.GCP_REGION }}
-  IMAGE_NAME: ${{ vars.ARTIFACT_IMAGE_NAME }}
+  PROJECT_ID: "new-map-project-1538399427267"
+  REGION: "us-central1"
+  IMAGE_NAME: "dbt_test"
   JOB_NAME: ${{ vars.CLOUD_RUN_JOB_NAME }}
-  WORKFLOW_NAME: ${{ vars.WORKFLOW_NAME }}
-  WIF_PROVIDER: ${{ vars.WIF_PROVIDER }}
-  DEPLOYER_SERVICE_ACCOUNT: ${{ vars.DEPLOYER_SERVICE_ACCOUNT }}
+  WORKFLOW_NAME: "dbt_test_workflow_new"
+  DEPLOYER_SERVICE_ACCOUNT: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -20,8 +19,8 @@ jobs:
     - id: auth
       uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: ${{ env.WIF_PROVIDER }}
-        service_account: ${{ env.DEPLOYER_SERVICE_ACCOUNT }}
+        workload_identity_provider: 'projects/995265336172/locations/global/workloadIdentityPools/github-dbt-pool/providers/github-dbt-provider'
+        service_account: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
     - uses: docker/login-action@v3
       with:
         registry: ${{ env.REGION }}-docker.pkg.dev
