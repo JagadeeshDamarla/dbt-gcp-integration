@@ -8,7 +8,7 @@ env:
   PROJECT_ID: "new-map-project-1538399427267"
   REGION: "us-central1"
   IMAGE_NAME: "dbt_test"
-  JOB_NAME: ${{ vars.CLOUD_RUN_JOB_NAME }}
+  JOB_NAME: "dbt_test_job_c_run"
   WORKFLOW_NAME: "dbt_test_workflow_new"
   DEPLOYER_SERVICE_ACCOUNT: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
 jobs:
