@@ -9,7 +9,7 @@ env:
   REGION: "us-central1"
   IMAGE_NAME: "dbt_test"
   REPOSITORY: "dbt-images"
-  JOB_NAME: "dbt_test_job_c_run"
+  JOB_NAME: "dbt-test-job-c-run"
   WORKFLOW_NAME: "dbt_test_workflow_new"
   DEPLOYER_SERVICE_ACCOUNT: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
 jobs:
@@ -33,6 +33,13 @@ jobs:
         gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
           --project=${{ env.PROJECT_ID }} \
           --location=${{ env.REGION }}
+    - name: Validate Cloud Run Job Name
+      run: |
+        if ! [[ "${{ env.JOB_NAME }}" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]; then
+          echo "Invalid JOB_NAME: ${{ env.JOB_NAME }}"
+          echo "Must be 1-63 chars, lowercase letters/numbers/dashes, and cannot start or end with dash."
+          exit 1
+        fi
     - uses: docker/build-push-action@v5
       with:
         context: ./dbt_airflow_test
