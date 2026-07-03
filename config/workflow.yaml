@@ -129,16 +129,6 @@ main:
                       - loop_back:
                           next: check_job_status
 
-                  # Condition A2: Wait for completion metadata to become available
-                  - condition: ${not("response" in execution_status.body) or not("completionTime" in execution_status.body.response)}
-                    steps:
-                      - sleep_for_completion:
-                          call: sys.sleep
-                          args:
-                            seconds: 30
-                      - loop_back_for_completion:
-                          next: check_job_status
-                  
                   # Condition B: Cloud Run infrastructure failed (e.g., timeout, out of memory)
                   - condition: ${"error" in execution_status.body}
                     steps:
