@@ -39,6 +39,36 @@ jobs:
           echo "Must be 1-63 chars, lowercase letters/numbers/dashes, and cannot start or end with dash."
           exit 1
         fi
+    - name: Set up Python for dbt tests
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    - name: Install dbt dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r dbt_airflow_test/requirements.txt
+    - name: Run dbt tests
+      env:
+        SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      run: |
+        if [[ -z "${SNOWFLAKE_PASSWORD}" ]]; then
+          echo "Missing required GitHub secret: SNOWFLAKE_PASSWORD"
+          exit 1
+        fi
+
+        FROM_DATE="$(date -u -d '1 day ago' +%F)"
+        TO_DATE="$(date -u +%F)"
+
+        dbt seed \
+          --project-dir dbt_airflow_test \
+          --profiles-dir dbt_airflow_test \
+          --select customer_seed
+
+        dbt build \
+          --project-dir dbt_airflow_test \
+          --profiles-dir dbt_airflow_test \
+          --select customer_seed_view customer_seed_view_test \
+          --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
     - uses: docker/build-push-action@v5
       with:
         context: ./dbt_airflow_test

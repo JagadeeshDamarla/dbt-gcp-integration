@@ -1,0 +1,100 @@
+version: 2
+
+models:
+  - name: customer_seed_view
+    description: Clean customer projection with derived segmentation fields.
+    columns:
+      - name: customer_id
+        description: Unique customer identifier.
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('customer_seed')
+              field: customer_id
+      - name: first_name
+        description: Customer first name.
+        tests:
+          - not_null
+      - name: last_name
+        description: Customer last name.
+        tests:
+          - not_null
+      - name: full_name
+        description: Concatenated customer full name.
+        tests:
+          - not_null
+      - name: city
+        description: Customer city.
+        tests:
+          - not_null
+      - name: state
+        description: Customer state.
+        tests:
+          - not_null
+      - name: city_state
+        description: Concatenated city and state.
+        tests:
+          - not_null
+      - name: signup_date
+        description: Customer signup date.
+        tests:
+          - not_null
+      - name: account_tier
+        description: Tier coming from upstream customer seed data.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['gold', 'silver', 'bronze']
+      - name: value_segment
+        description: Segment derived from lifetime value thresholds.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['high', 'medium', 'low']
+      - name: signup_year
+        description: Year extracted from signup date.
+        tests:
+          - not_null
+      - name: lifetime_value
+        description: Customer lifetime value amount.
+        tests:
+          - not_null
+      - name: is_gold_customer
+        description: Derived boolean flag for gold customers.
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+  - name: customer_seed_view_test
+    description: Date-parameterized projection of customer_seed_view.
+    columns:
+      - name: customer_id
+        description: Should remain unique in the parameterized projection.
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              to: ref('customer_seed_view')
+              field: customer_id
+      - name: value_segment
+        description: Derived value segment copied from source model.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['high', 'medium', 'low']
+      - name: account_tier
+        description: Account tier copied from source model.
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['gold', 'silver', 'bronze']
+      - name: from_date
+        description: Runtime lower bound date injected from workflow params.
+        tests:
+          - not_null
+      - name: to_date
+        description: Runtime upper bound date injected from workflow params.
+        tests:
+          - not_null

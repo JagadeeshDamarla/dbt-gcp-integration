@@ -85,3 +85,7 @@ The deploy workflow expects these repository variables to be set (typically from
 - `WORKFLOW_NAME`
 - `WIF_PROVIDER`
 - `DEPLOYER_SERVICE_ACCOUNT`
+
+The deploy workflow also requires this repository secret because dbt tests are executed before image deployment:
+
+- `SNOWFLAKE_PASSWORD`
