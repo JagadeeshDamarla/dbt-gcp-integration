@@ -28,18 +28,23 @@ jobs:
         registry: ${{ env.REGION }}-docker.pkg.dev
         username: oauth2accesstoken
         password: ${{ steps.auth.outputs.access_token }}
+    - name: Validate Artifact Registry Repository
+      run: |
+        gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
+          --project=${{ env.PROJECT_ID }} \
+          --location=${{ env.REGION }}
     - uses: docker/build-push-action@v5
       with:
         context: ./dbt_airflow_test
         file: ./dbt_airflow_test/Dockerfile
         push: true
         tags: |
-          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:latest
+          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+          ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:latest
     - name: Update GCP Cloud Run Job
       run: |
         gcloud run jobs update ${{ env.JOB_NAME }} \
-          --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --image=${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
           --project=${{ env.PROJECT_ID }} \
           --region=${{ env.REGION }}
     - name: Deploy Workflow Definition
