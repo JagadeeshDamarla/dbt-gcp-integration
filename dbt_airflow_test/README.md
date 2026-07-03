@@ -28,14 +28,51 @@ The Cloud Run Job should inject these environment variables:
 - `DBT_FROM_DATE`
 - `DBT_TO_DATE`
 - `DBT_LOG_BUCKET`
-- `SNOWFLAKE_ACCOUNT`
-- `SNOWFLAKE_USER`
 - `SNOWFLAKE_PASSWORD`
-- `SNOWFLAKE_ROLE`
-- `SNOWFLAKE_DATABASE`
-- `SNOWFLAKE_WAREHOUSE`
-- `SNOWFLAKE_SCHEMA`
-- `DBT_THREADS` (optional, default `4`)
+
+The dbt profile currently uses hardcoded non-secret Snowflake config values and reads only `SNOWFLAKE_PASSWORD` from runtime.
+
+## Manual Workflow Run Template
+
+Use this payload when manually executing the GCP Workflow:
+
+```json
+{
+	"region": "us-central1",
+	"job_name": "dbt-test-job-c-run",
+	"dbt_params": {
+		"from_date": "2026-07-02",
+		"to_date": "2026-07-02"
+	},
+	"notification_template": {
+		"provider": "slack",
+		"slack_webhook_secret_resource": "projects/995265336172/secrets/SLACK_WEBHOOK",
+		"attributes": {
+			"region": "region",
+			"operation": "operation",
+			"workflow_execution": "workflow_execution"
+		},
+		"status_icons": {
+			"started": ":information_source:",
+			"success": ":white_check_mark:",
+			"failure": ":x:"
+		}
+	}
+}
+```
+
+Execute via `gcloud`:
+
+```bash
+gcloud workflows executions run dbt_test_workflow_new \
+	--project=new-map-project-1538399427267 \
+	--location=us-central1 \
+	--data='{"region":"us-central1","job_name":"dbt-test-job-c-run","dbt_params":{"from_date":"2026-07-02","to_date":"2026-07-02"},"notification_template":{"provider":"slack","slack_webhook_secret_resource":"projects/995265336172/secrets/SLACK_WEBHOOK","attributes":{"region":"region","operation":"operation","workflow_execution":"workflow_execution"},"status_icons":{"started":":information_source:","success":":white_check_mark:","failure":":x:"}}}'
+```
+
+Notes:
+- `dbt_params` is optional; if omitted, Workflow defaults are used.
+- Keep `notification_template` in the payload because the current Workflow expects it.
 
 ## GitHub Actions variables
 
