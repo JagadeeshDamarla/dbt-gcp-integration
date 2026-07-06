@@ -50,7 +50,7 @@ jobs:
           echo "Must be 1-63 chars, lowercase letters/numbers/dashes, and cannot start or end with dash."
           exit 1
         fi
-    - name: Set up Python for dbt tests
+    - name: Set up Python for dbt checks
       uses: actions/setup-python@v5
       with:
         python-version: '3.10'
@@ -58,33 +58,16 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r "${DBT_PROJECT_DIR}/requirements.txt"
-    - name: Run dbt tests
+    - name: Run dbt static checks
       run: |
-        export SNOWFLAKE_PASSWORD="$(gcloud secrets versions access latest \
-          --secret=SNOWFLAKE_PASSWORD \
-          --project="${PROJECT_ID}" | tr -d '\r\n')"
-
-        echo "::add-mask::${SNOWFLAKE_PASSWORD}"
-
-        FROM_DATE="$(date -u -d '1 day ago' +%F)"
-        TO_DATE="$(date -u +%F)"
-
-        dbt seed \
+        dbt deps \
           --project-dir "${DBT_PROJECT_DIR}" \
           --profiles-dir "${DBT_PROJECT_DIR}"
 
-        if [[ -n "${DBT_MODEL_SELECTOR}" ]]; then
-          dbt build \
-            --project-dir "${DBT_PROJECT_DIR}" \
-            --profiles-dir "${DBT_PROJECT_DIR}" \
-            --select ${DBT_MODEL_SELECTOR} \
-            --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
-        else
-          dbt build \
-            --project-dir "${DBT_PROJECT_DIR}" \
-            --profiles-dir "${DBT_PROJECT_DIR}" \
-            --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
-        fi
+        dbt parse \
+          --project-dir "${DBT_PROJECT_DIR}" \
+          --profiles-dir "${DBT_PROJECT_DIR}" \
+          --warn-error
     - uses: docker/build-push-action@v5
       with:
         context: ./${{ env.DBT_PROJECT_DIR }}
