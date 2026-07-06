@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# Used by .github/workflows/dbt_deploy.yml to map the selected project
+# input to deploy environment variables. Keep PROJECT_SETTINGS in sync
+# with workflow project options.
+
 import argparse
 import os
 import sys
