@@ -1,26 +1,36 @@
 name: "Build and Deploy dbt Models"
 on:
   workflow_dispatch:
+    inputs:
+      project:
+        description: "dbt project to deploy"
+        required: true
+        type: choice
+        options:
+          - dbt_airflow_test
 permissions:
   contents: read
   id-token: write
 env:
   PROJECT_ID: "new-map-project-1538399427267"
   REGION: "us-central1"
-  IMAGE_NAME: "dbt_test"
   REPOSITORY: "dbt-images"
-  JOB_NAME: "dbt-test-job-c-run"
-  DEPLOYER_SERVICE_ACCOUNT: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
+  WIF_PROVIDER: "projects/995265336172/locations/global/workloadIdentityPools/github-dbt-pool/providers/github-dbt-provider"
+  DEPLOYER_SERVICE_ACCOUNT: "github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com"
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+    - name: Resolve project settings
+      shell: bash
+      run: |
+        python3 scripts/resolve_deploy_project.py --project "${{ github.event.inputs.project }}"
     - id: auth
       uses: google-github-actions/auth@v2
       with:
-        workload_identity_provider: 'projects/995265336172/locations/global/workloadIdentityPools/github-dbt-pool/providers/github-dbt-provider'
-        service_account: 'github-actions-dbt@new-map-project-1538399427267.iam.gserviceaccount.com'
+        workload_identity_provider: ${{ env.WIF_PROVIDER }}
+        service_account: ${{ env.DEPLOYER_SERVICE_ACCOUNT }}
         token_format: 'access_token'
     - uses: docker/login-action@v3
       with:
@@ -46,7 +56,7 @@ jobs:
     - name: Install dbt dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r dbt_airflow_test/requirements.txt
+        pip install -r "${DBT_PROJECT_DIR}/requirements.txt"
     - name: Run dbt tests
       env:
         SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
@@ -60,19 +70,25 @@ jobs:
         TO_DATE="$(date -u +%F)"
 
         dbt seed \
-          --project-dir dbt_airflow_test \
-          --profiles-dir dbt_airflow_test \
-          --select customer_seed
+          --project-dir "${DBT_PROJECT_DIR}" \
+          --profiles-dir "${DBT_PROJECT_DIR}"
 
-        dbt build \
-          --project-dir dbt_airflow_test \
-          --profiles-dir dbt_airflow_test \
-          --select customer_seed_view customer_seed_view_test \
-          --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
+        if [[ -n "${DBT_MODEL_SELECTOR}" ]]; then
+          dbt build \
+            --project-dir "${DBT_PROJECT_DIR}" \
+            --profiles-dir "${DBT_PROJECT_DIR}" \
+            --select ${DBT_MODEL_SELECTOR} \
+            --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
+        else
+          dbt build \
+            --project-dir "${DBT_PROJECT_DIR}" \
+            --profiles-dir "${DBT_PROJECT_DIR}" \
+            --vars "{\"from_date\": \"${FROM_DATE}\", \"to_date\": \"${TO_DATE}\"}"
+        fi
     - uses: docker/build-push-action@v5
       with:
-        context: ./dbt_airflow_test
-        file: ./dbt_airflow_test/Dockerfile
+        context: ./${{ env.DBT_PROJECT_DIR }}
+        file: ./${{ env.DBT_PROJECT_DIR }}/Dockerfile
         push: true
         tags: |
           ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

@@ -5,18 +5,31 @@ set -u
 DBT_DIR="/usr/app/dbt"
 DBT_EXIT_CODE=0
 
-build_dbt_vars_json() {
+resolve_dbt_vars_json() {
   python - <<'PY'
 import json
 import os
 
-vars_payload = {}
+raw_vars_json = os.getenv("DBT_VARS_JSON", "").strip()
 from_date = os.getenv("DBT_FROM_DATE", "").strip()
 to_date = os.getenv("DBT_TO_DATE", "").strip()
 
-if not from_date or not to_date:
-  raise SystemExit("DBT_FROM_DATE and DBT_TO_DATE are required.")
+if raw_vars_json:
+  try:
+    parsed = json.loads(raw_vars_json)
+  except json.JSONDecodeError as exc:
+    raise SystemExit(f"DBT_VARS_JSON is not valid JSON: {exc}")
 
+  if not isinstance(parsed, dict):
+    raise SystemExit("DBT_VARS_JSON must be a JSON object.")
+
+  print(json.dumps(parsed, separators=(",", ":")))
+  raise SystemExit(0)
+
+if not from_date or not to_date:
+  raise SystemExit("Provide DBT_VARS_JSON, or both DBT_FROM_DATE and DBT_TO_DATE.")
+
+vars_payload = {}
 vars_payload["from_date"] = from_date
 vars_payload["to_date"] = to_date
 
@@ -28,8 +41,16 @@ run_dbt() {
   cd "$DBT_DIR" || return 1
 
   local dbt_vars_json
-  dbt_vars_json="$(build_dbt_vars_json)"
+  local dbt_select
+  dbt_vars_json="$(resolve_dbt_vars_json)"
+  dbt_select="${DBT_SELECT:-}"
   echo "Running dbt build with vars: ${dbt_vars_json}"
+
+  if [ -n "$dbt_select" ]; then
+    echo "Using dbt selector: ${dbt_select}"
+    dbt build --select "$dbt_select" --vars "$dbt_vars_json"
+    return
+  fi
 
   dbt build --vars "$dbt_vars_json"
 }

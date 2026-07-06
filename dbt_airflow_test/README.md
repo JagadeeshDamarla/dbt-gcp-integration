@@ -76,15 +76,20 @@ Notes:
 
 ## GitHub Actions variables
 
-The deploy workflow expects these repository variables to be set (typically from your Terraform-managed environment):
+The deploy workflow now resolves project settings from a project input and an external resolver script.
 
-- `GCP_PROJECT_ID`
-- `GCP_REGION`
-- `ARTIFACT_IMAGE_NAME`
-- `CLOUD_RUN_JOB_NAME`
-- `WORKFLOW_NAME`
-- `WIF_PROVIDER`
-- `DEPLOYER_SERVICE_ACCOUNT`
+To deploy a specific job:
+1. Add or update a project option in `.github/workflows/dbt_deploy.yml`.
+2. Add a matching mapping entry in `scripts/resolve_deploy_project.py`.
+3. Run GitHub Actions workflow `Build and Deploy dbt Models`.
+4. Select the `project` input that matches your mapping entry.
+
+The workflow dynamically resolves:
+- GCP project and region
+- Artifact Registry repo and image name
+- Cloud Run job name
+- WIF provider and deployer service account
+- dbt project directory and model selector
 
 The deploy workflow also requires this repository secret because dbt tests are executed before image deployment:
 
