@@ -37,6 +37,12 @@ Important operating note:
 - if you are deploying this in GCP, run the infra setup first
 - the Cloud Run Job, Workflow, Scheduler, and IAM wiring must already exist before the deploy workflow can only update the image
 
+Important rule examples:
+
+- GCP infra change only: change the Cloud Run Job name, Workflow schedule, secret ids, runtime service account, or IAM bindings in the infra repo
+- dbt code change only: add or edit a model SQL file, snapshot, macro, seed, or test in this repo without touching Terraform
+- shared change: if you rename a job or add a new project, update both the integration deploy mapping and the infra Terraform file together
+
 ## Prerequisites
 
 Before you work on this repo, make sure you have:
@@ -190,6 +196,11 @@ Use seeds for:
 - small static lookup tables
 - local reference datasets
 - lightweight test data
+
+Important note:
+
+- seeds are useful for small reference data, but they are usually not a good production pattern for large or frequently changing business data
+- if the dataset is operational or high-volume, prefer a warehouse table, staged source, or another managed upstream input instead of a seed
 
 ### Add macros
 
