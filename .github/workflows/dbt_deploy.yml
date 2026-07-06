@@ -60,9 +60,9 @@ jobs:
         pip install -r "${DBT_PROJECT_DIR}/requirements.txt"
     - name: Run dbt tests
       run: |
-        SNOWFLAKE_PASSWORD="$(gcloud secrets versions access latest \
+        export SNOWFLAKE_PASSWORD="$(gcloud secrets versions access latest \
           --secret=SNOWFLAKE_PASSWORD \
-          --project="${PROJECT_ID}")"
+          --project="${PROJECT_ID}" | tr -d '\r\n')"
 
         echo "::add-mask::${SNOWFLAKE_PASSWORD}"
 
