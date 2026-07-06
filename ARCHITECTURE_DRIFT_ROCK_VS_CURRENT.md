@@ -1,113 +1,103 @@
 # Architecture Drift Summary: current setup vs rock_logistics
 
-## Scope compared
+## Scope Compared
+
 - Current setup:
-  - dbt-gcp-integration (app/image/dbt code, Cloud Run job image update)
-  - dbt-gcp-infra (Terraform infra ownership)
+  - `dbt-gcp-integration` for dbt code, image build, and deploy-time validation
+  - `dbt-gcp-infra` for Terraform-managed Cloud Run, Workflow, Scheduler, IAM, and secret references
 - Reference setup:
-  - rock_logistics_inbound-main (single monorepo with app + infra + CI and many pipelines)
+  - `rock_logistics_inbound-main`, which is a single monorepo with many pipeline folders, local run scripts, and layered Terraform stacks
 
-## High-level architecture snapshots
+## High-Level Architecture Snapshot
 
-### Current setup (yours)
-- Two-repo split:
-  - App repo builds/pushes image and updates existing Cloud Run Job image.
-  - Infra repo owns Terraform resources (Cloud Run Job, Workflows, IAM, APIs, secrets references).
-- Workflow ownership intentionally separated to avoid overlap.
-- Infra pipeline currently optimized for manual dispatch and safer execution in limited-permission CI.
+### Current setup
+
+- Two-repo split with explicit ownership boundaries
+- GitHub Actions in the integration repo now performs lightweight validation only:
+  - resolves the selected project mapping
+  - runs `dbt deps`
+  - runs `dbt parse`
+  - builds and pushes the image
+  - updates the existing Cloud Run Job image
+- Runtime dbt execution happens in Cloud Run through the Workflow and runtime shell script
+- Workflow payloads can pass selectors and vars through `dbt_select` and `dbt_vars`
+- Infra repo uses a rock-style one-pipeline-per-`tf` file pattern under `infra/`
 
 ### rock_logistics setup
-- Single monorepo contains:
-  - custom pipelines, multiple dbt projects, local run scripts, CI workflows, Terraform stacks.
-- Terraform segmented into stage folders (`10_base_config`, `20_base_infrastructure`, `30_pipelines`, `40_dbt_pipelines`, etc.).
-- Deploy flow can build one selected pipeline and then apply infra stacks from same repo.
-- Strong reuse via Terraform modules for pipeline jobs, scheduler, workflows, secrets, and service accounts.
 
-## Drift identified (what differs materially)
+- Single monorepo contains app code, multiple dbt projects, local scripts, CI workflows, and Terraform stacks
+- Terraform is split across stage folders and shared modules
+- Pipeline deploys and infra management are more tightly coupled inside one repository
+- Runtime conventions are standardized across many jobs
+
+## Drift Identified
 
 1. Repo boundary and ownership model
-- Current: clean app/infra split across two repos.
-- rock_logistics: single monorepo, app and infra tightly co-located.
 
-2. Deployment coupling
-- Current: app deploy updates image only; infra deploy owns resource lifecycle.
-- rock_logistics: build and infra deploy are orchestrated together in repo workflows.
+- Current: clean split across two repos
+- rock_logistics: one monorepo with app and infra co-located
 
-3. Scale model
-- Current: focused setup for one dbt project/job pattern.
-- rock_logistics: platform style with many pipeline definitions and per-pipeline tf files.
+2. Execution timing
+
+- Current: GitHub Actions does not execute warehouse-backed dbt commands anymore
+- Runtime dbt commands live in Cloud Run and are triggered by the Workflow
+- rock_logistics: broader platform repo patterns with more build-orchestration coupling
+
+3. Deployment coupling
+
+- Current: app deploy updates image only; infra deploy owns resource lifecycle
+- rock_logistics: build and infra deploy are orchestrated together in the same repo
 
 4. Terraform topology
-- Current: environment-root modules in separate infra repo.
-- rock_logistics: layered stack folders with shared constants and environment/project selection scripts.
 
-5. Scheduling/orchestration style
-- Current: Workflow orchestration exists, but pipeline shape is simpler.
-- rock_logistics: both Cloud Scheduler -> Cloud Run and Scheduler -> Workflow patterns are used, including multi-schedule support and runtime tag injection.
+- Current: infra root is flattened and uses one pipeline file per dbt pipeline
+- rock_logistics: layered stage folders with a larger shared platform surface
+
+5. Runtime selector model
+
+- Current: runtime can accept `dbt_select` and `dbt_vars` directly from the Workflow payload
+- rock_logistics: more of the selection logic is embedded in repo-specific pipeline conventions and scripts
 
 6. IAM and bootstrap handling
-- Current: explicit friction surfaced in CI permissions (service usage + IAM policy update), with safety toggles.
-- rock_logistics: assumes stronger pre-provisioned IAM baseline and custom roles; CI appears integrated with that baseline.
 
-7. Runtime standardization
-- Current: one dbt project container pattern currently.
-- rock_logistics: standardized env injection (`PROJECT_ID`, `TEAM`, `OTTO_ID`, secrets) and moduleized Cloud Run runtime settings across many jobs.
+- Current: CI permissions are intentionally constrained, with a separate toggle for IAM ownership
+- rock_logistics: assumes a stronger pre-provisioned platform baseline
 
-## Pros and cons of both approaches
+7. Scale model
 
-### Current split-repo approach (your model)
-Pros
-- Clear separation of concerns (infra lifecycle vs app lifecycle).
-- Lower blast radius from app changes; infra drift is easier to reason about.
-- Better governance path for regulated environments (approval boundaries by repo).
-- Easier to enforce least privilege in CI per repo purpose.
+- Current: smaller footprint with one main dbt project and explicit mapping files
+- rock_logistics: many pipelines and broader module reuse across the same monorepo
 
-Cons
-- Requires strict contract management between repos (names, regions, job/workflow ids, secrets).
-- Higher operational coordination overhead.
-- Bootstrap failures (API/IAM/backend) can be harder to debug across repo boundaries.
-- Risk of temporary mismatch if one repo changes and the other lags.
+## What The Current Setup Is Doing Well
 
-### rock_logistics monorepo + layered stacks approach
-Pros
-- Fast delivery and discoverability: infra/app/scripts/workflows in one place.
-- Strong reuse via modules and stage-based terraform structure.
-- Easier bulk operations across many pipelines.
-- Lower coordination cost when one team owns full platform codebase.
+- clear separation of infra and app concerns
+- runtime execution is now the source of truth for dbt runs
+- deploy-time checks are lightweight and safer
+- workflow payloads make tag-based and parameterized runs possible without changing SQL for every execution
+- logs and artifacts are persisted to GCS for later analysis
 
-Cons
-- Tighter coupling; app and infra changes can affect each other more directly.
-- Larger blast radius for mistakes.
-- Harder permission segmentation if many contributors touch same repo.
-- CI/CD complexity can grow quickly with many pipelines and matrixed deploy paths.
+## Remaining Drift From The Rock-Style Reference
 
-## What you are already doing well
-- You moved to explicit ownership split (good for scale/governance).
-- You removed overlapping workflow deployment from app repo.
-- You added fail-fast validation in infra CI (backend vars/service checks).
-- You introduced safe feature toggles for IAM management where permissions are constrained.
+1. The repos are still split instead of being one monorepo.
+2. The contract between repos is still maintained manually through project mapping and Terraform naming.
+3. The current setup is smaller and more explicit, so it lacks the broad multi-pipeline scaffolding of the reference repo.
+4. The deployment path is simpler, but not yet fully automated across both repos.
 
-## Suggested target state (best of both)
+## Suggested Target State
 
-1. Keep two-repo ownership model.
-2. Adopt rock-style module standardization patterns for multi-pipeline growth:
-- reusable pipeline module inputs for schedule, secrets, runtime env, resources.
-3. Create a versioned contract file shared by both repos (single source of truth for):
-- project_id, region, artifact repository, job names, workflow names, secret ids.
-4. Export required values from infra Terraform outputs and sync into app repo variables automatically.
-5. Introduce environment promotion flow:
-- infra apply -> app image deploy -> workflow execution smoke checks.
+- keep the two-repo ownership model
+- keep the rock-style one-`tf`-file-per-pipeline pattern in infra
+- keep deploy-time dbt validation lightweight
+- keep runtime execution in Cloud Run and let the Workflow own parameters, selectors, and notifications
+- use a small shared contract for names, job ids, workflow ids, regions, and secret ids
 
-## Practical migration checklist from here
+## Practical Checklist For Future Changes
 
-1. Add additional dbt job definitions in infra using reusable module blocks.
-2. Keep app repo workflow image-only and job-update-only per repo.
-3. Add one orchestrator workflow input schema for runtime model selectors/vars.
-4. Automate repo variable sync from infra outputs.
-5. Add policy guardrails:
-- CI permissions by responsibility, and separate IAM-admin apply path.
+1. If the change is SQL-only, update the integration repo only.
+2. If the change affects Cloud Run, Workflow, Scheduler, IAM, or secrets, update the infra repo.
+3. If the change affects both the image and the runtime wiring, update both repos in the same change window.
+4. If you add a new project, update the deploy mapping, the Terraform pipeline file, and the runtime workflow contract together.
 
 ---
-Prepared by comparing:
-- rock_logistics_inbound-main workflows, terraform stages/modules, and pipeline scheduling patterns
-- dbt-gcp-integration + dbt-gcp-infra current split architecture and recent CI/Terraform alignment changes
+
+Prepared by comparing the current integration and infra repos against the rock-style monorepo pattern.
