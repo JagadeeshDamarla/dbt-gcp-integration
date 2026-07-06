@@ -10,8 +10,9 @@ models:
           - not_null
           - unique
           - relationships:
-              to: ref('customer_seed')
-              field: customer_id
+              arguments:
+                to: ref('customer_seed')
+                field: customer_id
       - name: first_name
         description: Customer first name.
         tests:
@@ -45,13 +46,15 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['gold', 'silver', 'bronze']
+              arguments:
+                values: ['gold', 'silver', 'bronze']
       - name: value_segment
         description: Segment derived from lifetime value thresholds.
         tests:
           - not_null
           - accepted_values:
-              values: ['high', 'medium', 'low']
+              arguments:
+                values: ['high', 'medium', 'low']
       - name: signup_year
         description: Year extracted from signup date.
         tests:
@@ -65,7 +68,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: [true, false]
+              arguments:
+                values: [true, false]
 
   - name: customer_seed_view_test
     description: Date-parameterized projection of customer_seed_view.
@@ -76,20 +80,23 @@ models:
           - not_null
           - unique
           - relationships:
-              to: ref('customer_seed_view')
-              field: customer_id
+              arguments:
+                to: ref('customer_seed_view')
+                field: customer_id
       - name: value_segment
         description: Derived value segment copied from source model.
         tests:
           - not_null
           - accepted_values:
-              values: ['high', 'medium', 'low']
+              arguments:
+                values: ['high', 'medium', 'low']
       - name: account_tier
         description: Account tier copied from source model.
         tests:
           - not_null
           - accepted_values:
-              values: ['gold', 'silver', 'bronze']
+              arguments:
+                values: ['gold', 'silver', 'bronze']
       - name: from_date
         description: Runtime lower bound date injected from workflow params.
         tests:
