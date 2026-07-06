@@ -44,6 +44,10 @@ run_dbt() {
   local dbt_select
   dbt_vars_json="$(resolve_dbt_vars_json)"
   dbt_select="${DBT_SELECT:-}"
+
+  echo "Running dbt seed"
+  dbt seed || return 1
+
   echo "Running dbt build with vars: ${dbt_vars_json}"
 
   if [ -n "$dbt_select" ]; then
