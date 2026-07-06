@@ -59,15 +59,12 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r "${DBT_PROJECT_DIR}/requirements.txt"
     - name: Run dbt tests
-      env:
-        SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
       run: |
-        if [[ -z "${SNOWFLAKE_PASSWORD}" ]]; then
-          echo "Missing required GitHub secret: SNOWFLAKE_PASSWORD"
-          echo "Checked secrets context for this job (repo/org + environment 'prod')."
-          echo "If this secret is environment-scoped, ensure it exists under Environment: prod."
-          exit 1
-        fi
+        SNOWFLAKE_PASSWORD="$(gcloud secrets versions access latest \
+          --secret=SNOWFLAKE_PASSWORD \
+          --project="${PROJECT_ID}")"
+
+        echo "::add-mask::${SNOWFLAKE_PASSWORD}"
 
         FROM_DATE="$(date -u -d '1 day ago' +%F)"
         TO_DATE="$(date -u +%F)"
