@@ -20,6 +20,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: prod
     steps:
     - uses: actions/checkout@v4
     - name: Resolve project settings
@@ -63,6 +64,8 @@ jobs:
       run: |
         if [[ -z "${SNOWFLAKE_PASSWORD}" ]]; then
           echo "Missing required GitHub secret: SNOWFLAKE_PASSWORD"
+          echo "Checked secrets context for this job (repo/org + environment 'prod')."
+          echo "If this secret is environment-scoped, ensure it exists under Environment: prod."
           exit 1
         fi
 
