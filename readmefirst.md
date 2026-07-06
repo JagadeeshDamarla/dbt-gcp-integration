@@ -500,6 +500,67 @@ That singular test fails if duplicate customer ids appear.
 7. if you added a new project, update both the deploy workflow and infra tf file
 8. review the architecture drift note if you want the current setup compared with the rock-style repo
 
+## PR Approval Checklist
+
+Use this checklist before approving a PR:
+
+- [ ] the change is in the correct repository
+- [ ] the change only touches the expected files
+- [ ] CI still performs lightweight validation only (`dbt deps`, `dbt parse`)
+- [ ] runtime dbt execution still happens in Cloud Run, not in GitHub Actions
+- [ ] new dbt logic is in the correct folders (`models`, `snapshots`, `seeds`, `macros`, `tests`)
+- [ ] generic test syntax uses `arguments:` where required
+- [ ] new models and snapshots use `ref()` correctly
+- [ ] selector/tag behavior is reflected in workflow payload handling
+- [ ] runtime script behavior is preserved, including artifact upload to GCS
+- [ ] infra-impacting changes are also updated in the infra repo
+- [ ] new project onboarding updates both deploy mapping and infra Terraform
+- [ ] secrets are still sourced from GCP Secret Manager and not committed in code
+- [ ] validation evidence is included when relevant (`dbt parse`, `terraform validate`, workflow run evidence)
+- [ ] docs are updated when user-facing behavior changes
+
+## AI Agent Handoff Guide
+
+If you need to hand this repo to an AI agent, provide these files first:
+
+1. `readmefirst.md`
+2. `.github/workflows/dbt_deploy.yml`
+3. `dbt_airflow_test/run_dbt_with_log_upload.sh`
+4. `dbt_airflow_test/dbt_project.yml`
+5. `dbt_airflow_test/profiles.yml`
+6. `dbt_airflow_test/models/example/schema.yml`
+7. `../dbt-gcp-infra/infra/README.md`
+8. `../dbt-gcp-infra/infra/config/workflow.yaml`
+9. `../dbt-gcp-infra/infra/dbt_airflow_test.tf`
+
+Brief template for the agent:
+
+```text
+Goal:
+
+Repo:
+
+Files to inspect first:
+
+Files likely to change:
+
+Constraints:
+- keep CI limited to syntax/static checks
+- keep dbt execution in runtime
+- do not introduce new secret handling patterns
+- do not change unrelated files
+
+Success criteria:
+
+Validation:
+```
+
+Quick ownership rule:
+
+- integration repo: dbt SQL, snapshots, seeds, macros, tests, runtime script, deploy mapping
+- infra repo: Cloud Run Job, Workflow, Scheduler, IAM, Secret Manager access, Terraform
+- if image behavior and runtime infra contract both change, update both repos in the same change
+
 ## What To Read Next
 
 - `../dbt-gcp-infra/infra/README.md` for the infrastructure side
