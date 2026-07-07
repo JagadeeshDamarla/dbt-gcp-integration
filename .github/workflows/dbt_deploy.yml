@@ -8,6 +8,7 @@ on:
         type: choice
         options:
           - dbt_airflow_test
+          - dbt_project_2
 permissions:
   contents: read
   id-token: write

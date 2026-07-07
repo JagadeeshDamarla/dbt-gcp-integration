@@ -496,6 +496,33 @@ The runtime script uploads:
 - `target/manifest.json`
 - `target/perf_info.json`
 
+### On-run-end audit macro
+
+This project also captures run metadata inside Snowflake using the macro in `dbt_airflow_test/macros/on_run_end_logging.sql`.
+
+How it is triggered:
+
+- `dbt_airflow_test/dbt_project.yml` registers `{{ log_run_results(results) }}` in `on-run-end`
+- after a dbt invocation, the macro executes and writes node-level result records
+
+What it records:
+
+- invocation id and run timestamps
+- target name, database, and schema
+- node unique id, model name, and resource type
+- status, execution time, message, and adapter response
+
+Where it writes:
+
+- table `DBT_RUN_AUDIT` in the active target database and schema
+- if target type is not Snowflake, the macro safely skips execution
+
+Why this matters:
+
+- GCS artifacts give file-based run evidence
+- `DBT_RUN_AUDIT` gives queryable run history directly in the warehouse
+- together they improve debugging, trend analysis, and post-run investigation
+
 ### Local and CI checks
 
 Use this repo’s lighter checks during deploy:

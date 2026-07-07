@@ -1,0 +1,14 @@
+# profiles.yml
+dbt_airflow_test:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "BPKRITC-SX65301"
+      user: "dbt_service_user"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD') }}"
+      role: "dbt_role"
+      database: "dbt_test_and_trail"
+      warehouse: "compute_wh"
+      schema: "raw"
+      threads: 4

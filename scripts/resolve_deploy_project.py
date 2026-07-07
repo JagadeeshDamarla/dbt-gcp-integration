@@ -15,7 +15,13 @@ PROJECT_SETTINGS = {
         "IMAGE_NAME": "dbt_test",
         "JOB_NAME": "dbt-test-job-c-run",
         "DBT_MODEL_SELECTOR": "customer_seed_view customer_seed_view_test",
-    }
+    },
+    "dbt_project_2": {
+        "DBT_PROJECT_DIR": "dbt_airflow_test",
+        "IMAGE_NAME": "dbt_image_2",
+        "JOB_NAME": "dbt-test-2",
+        "DBT_MODEL_SELECTOR": "test_proj_2",
+    },
 }
 
 
