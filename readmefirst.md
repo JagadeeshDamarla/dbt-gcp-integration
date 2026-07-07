@@ -407,6 +407,62 @@ A new project means a new dbt application folder and usually a new Cloud Run Job
 3. add a new `project` option to `.github/workflows/dbt_deploy.yml`
 4. add a matching entry in `scripts/resolve_deploy_project.py`
 
+Details for step 3 (`.github/workflows/dbt_deploy.yml`):
+
+- under `on.workflow_dispatch.inputs.project.options`, add the new project key
+- the option value must exactly match the key you will add in `PROJECT_SETTINGS`
+- this value is what users select when manually triggering the deploy workflow
+
+Example:
+
+```yaml
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "dbt project to deploy"
+        required: true
+        type: choice
+        options:
+          - dbt_airflow_test
+          - dbt_orders_prod
+```
+
+Details for step 4 (`scripts/resolve_deploy_project.py`):
+
+- add a new `PROJECT_SETTINGS` entry with the same key used in workflow options
+- define at least these values:
+  - `DBT_PROJECT_DIR`: folder name inside this repo
+  - `IMAGE_NAME`: Artifact Registry image name
+  - `JOB_NAME`: target Cloud Run Job name
+  - `DBT_MODEL_SELECTOR`: optional selector used by static checks or defaults
+- keep naming consistent with the infra Terraform file for that project
+
+Example:
+
+```python
+PROJECT_SETTINGS = {
+    "dbt_airflow_test": {
+        "DBT_PROJECT_DIR": "dbt_airflow_test",
+        "IMAGE_NAME": "dbt_test",
+        "JOB_NAME": "dbt-test-job-c-run",
+        "DBT_MODEL_SELECTOR": "customer_seed_view customer_seed_view_test",
+    },
+    "dbt_orders_prod": {
+        "DBT_PROJECT_DIR": "dbt_orders_prod",
+        "IMAGE_NAME": "dbt_orders_prod",
+        "JOB_NAME": "dbt-orders-prod-job",
+        "DBT_MODEL_SELECTOR": "tag:orders",
+    },
+}
+```
+
+Quick validation after adding both:
+
+1. trigger the deploy workflow and confirm the new project appears in the dropdown
+2. run `python3 scripts/resolve_deploy_project.py --project <new_project_key>` locally and confirm expected env outputs
+3. confirm `JOB_NAME` and `IMAGE_NAME` align with infra values before deployment
+
 ### In the infra repo
 
 1. add a new `*.tf` file under `../dbt-gcp-infra/infra/`
