@@ -1,7 +1,6 @@
 {{
 config(
         materialized = "view",
-        schema = "raw",
         tags=['test_run','view'],
         enabled=True,
         persist_docs={"relation": true, "columns": true},
