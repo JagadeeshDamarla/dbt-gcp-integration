@@ -319,17 +319,24 @@ Common selector examples:
 
 The GCP Workflow expects a payload with the job name, region, notification template, and optional dbt runtime overrides.
 
+Field guidance:
+
+- `job_name`: provide only the Cloud Run Job name attached to the target workflow (for example `dbttest-job1` or `dbttest-job2`)
+- `dbt_select`: optional dbt selector expression. It can target specific models, tags, or graph paths, for example:
+  - `tag:core`
+  - `tag:core+` include downstream dependencies
+  - `+tag:marts` include upstream parents
+  - `model_a model_b` run specific models
+  - omit `dbt_select` to run the project default build scope
+- `dbt_vars`: JSON object passed to dbt as `--vars` via `DBT_VARS_JSON`
+
 Example payload:
 
 ```json
 {
   "region": "us-central1",
-  "job_name": "your job tagged to the workflow name",
-  "dbt_select": "tag:core+ - you can provide this to provide at tag level(valid tag is needed or remove this entirely so only dbt build cmd will execute ",
-  "dbt_params": {
-    "from_date": "2026-07-01",
-    "to_date": "2026-07-06"
-  },
+  "job_name": "dbttest-job1",
+  "dbt_select": "tag:core+",
   "dbt_vars": {
     "from_date": "2026-07-01",
     "to_date": "2026-07-06",
@@ -358,13 +365,12 @@ Example command:
 gcloud workflows executions run dbt_test_workflow_new \
   --project=new-map-project-1538399427267 \
   --location=us-central1 \
-  --data='{"region":"us-central1","job_name":"dbt-test-job-c-run","dbt_select":"tag:core+","dbt_params":{"from_date":"2026-07-01","to_date":"2026-07-06"},"dbt_vars":{"from_date":"2026-07-01","to_date":"2026-07-06","country":"DE"},"notification_template":{"provider":"slack","slack_webhook_secret_resource":"projects/995265336172/secrets/SLACK_WEBHOOK","attributes":{"region":"region","operation":"operation","workflow_execution":"workflow_execution"},"status_icons":{"started":":information_source:","success":":white_check_mark:","failure":":x:"}}}'
+  --data='{"region":"us-central1","job_name":"dbttest-job1","dbt_select":"tag:core+","dbt_vars":{"from_date":"2026-07-01","to_date":"2026-07-06","country":"DE"},"notification_template":{"provider":"slack","slack_webhook_secret_resource":"projects/995265336172/secrets/SLACK_WEBHOOK","attributes":{"region":"region","operation":"operation","workflow_execution":"workflow_execution"},"status_icons":{"started":":information_source:","success":":white_check_mark:","failure":":x:"}}}'
 ```
 
 Notes:
 
-- `dbt_params` is the date override path used by the Workflow
-- `dbt_vars` takes precedence when present and is converted to JSON for the runtime container
+- `dbt_vars` is the runtime override path used by the Workflow and is converted to JSON for the container
 - `notification_template` is still required by the current Workflow implementation
 
 ## How To Use dbt Retry

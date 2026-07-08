@@ -86,15 +86,15 @@ Required payload fields:
 Recommended payload fields:
 - region
 - job_name
-- dbt_params.from_date
-- dbt_params.to_date
+- dbt_vars.from_date
+- dbt_vars.to_date
 
 Example command:
 ```bash
 gcloud workflows executions run dbt_test_workflow_new \
   --project=new-map-project-1538399427267 \
   --location=us-central1 \
-  --data='{"region":"us-central1","job_name":"dbt-test-job-c-run","dbt_params":{"from_date":"2026-07-02","to_date":"2026-07-02"},"notification_template":{"provider":"slack","slack_webhook_secret_resource":"projects/995265336172/secrets/SLACK_WEBHOOK","attributes":{"region":"region","operation":"operation","workflow_execution":"workflow_execution"},"status_icons":{"started":":information_source:","success":":white_check_mark:","failure":":x:"}}}'
+  --data='{"region":"us-central1","job_name":"dbttest-job1","dbt_vars":{"from_date":"2026-07-02","to_date":"2026-07-02"},"notification_template":{"provider":"slack","slack_webhook_secret_resource":"projects/995265336172/secrets/SLACK_WEBHOOK","attributes":{"region":"region","operation":"operation","workflow_execution":"workflow_execution"},"status_icons":{"started":":information_source:","success":":white_check_mark:","failure":":x:"}}}'
 ```
 
 ## 8. Cancellation Requirements
