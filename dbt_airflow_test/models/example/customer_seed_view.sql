@@ -1,4 +1,14 @@
-{{ config(materialized='view') }}
+{{
+config(
+        materialized = "view",
+        schema="raw",
+        tags=['test_run','view'],
+        enabled=True,
+        persist_docs={"relation": true, "columns": true},
+        query_tag=var("snowflk_query_tag",{'ottoid': '1234', 'team': 'test team'}) | tojson,
+        alias="customer_seed_view_test"
+)
+}}
 
 -- cte in view      
 with customer_seed as (

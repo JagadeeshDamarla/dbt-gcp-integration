@@ -1,7 +1,7 @@
 {{
 config(
         materialized = "view",
-        schema="PRD_BIWC_MARKETPLACE_SALES_PROV",
+        schema="raw",
         tags=['test_run','view'],
         enabled=True,
         persist_docs={"relation": true, "columns": true},
