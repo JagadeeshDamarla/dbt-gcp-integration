@@ -324,8 +324,8 @@ Example payload:
 ```json
 {
   "region": "us-central1",
-  "job_name": "dbt-test-job-c-run",
-  "dbt_select": "tag:core+",
+  "job_name": "your job tagged to the workflow name",
+  "dbt_select": "tag:core+ - you can provide this to provide at tag level(valid tag is needed or remove this entirely so only dbt build cmd will execute ",
   "dbt_params": {
     "from_date": "2026-07-01",
     "to_date": "2026-07-06"
