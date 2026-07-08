@@ -1,5 +1,5 @@
 # profiles.yml
-dbt_airflow_test:
+dbt_project_2:
   target: dev
   outputs:
     dev:
