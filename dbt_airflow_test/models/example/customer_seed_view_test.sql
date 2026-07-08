@@ -1,4 +1,14 @@
-{{ config(materialized='view') }}
+{{
+config(
+        materialized = "view",
+        schema="PRD_BIWC_MARKETPLACE_SALES_PROV",
+        tags=['test_run','view'],
+        enabled=True,
+        persist_docs={"relation": true, "columns": true},
+        query_tag=var("snowflk_query_tag",{'ottoid': '1234', 'team': 'test team'}) | tojson,
+        alias="customer_seed_view_test"
+)
+}}
 
 {% set from_date = var('from_date') %}
 {% set to_date = var('to_date') %}
