@@ -45,6 +45,9 @@ run_dbt() {
   dbt_vars_json="$(resolve_dbt_vars_json)"
   dbt_select="${DBT_SELECT:-}"
 
+  echo "Running dbt deps"
+  dbt deps || return 1
+
   echo "Running dbt seed"
   dbt seed || return 1
 
