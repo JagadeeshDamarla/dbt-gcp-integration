@@ -87,6 +87,11 @@ Required secrets and runtime dependencies:
 - `../dbt-gcp-infra/infra/config/workflow.yaml` passes runtime vars and selectors into Cloud Run
 - `../dbt-gcp-infra/infra/dbt_airflow_test.tf` defines the Cloud Run Job and Workflow wiring for this project
 
+Source of truth note:
+
+- the authoritative GCP Workflow definition lives only in `../dbt-gcp-infra/infra/config/workflow.yaml`
+- do not maintain a second workflow YAML copy in this integration repo
+
 ## What The Dockerfile Does
 
 The Dockerfile is the runtime packaging step for the dbt job.
