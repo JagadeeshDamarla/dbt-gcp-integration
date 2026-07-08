@@ -12,16 +12,18 @@ import sys
 PROJECT_SETTINGS = {
     "dbt_airflow_test": {
         "DBT_PROJECT_DIR": "dbt_airflow_test",
-        "IMAGE_NAME": "dbt_test",
-        "JOB_NAME": "dbt-test-job-c-run",
+        "IMAGE_NAME": "dbt_test_job1",
+        "JOB_NAME": "dbttest-job1",
+        "WORKFLOW_NAME": "dbttest-orchestrator-job1",
         "DBT_MODEL_SELECTOR": "customer_seed_view customer_seed_view_test",
     },
     "dbt_project_2": {
-        "DBT_PROJECT_DIR": "dbt_airflow_test",
+        "DBT_PROJECT_DIR": "dbt_project_2",
         "IMAGE_NAME": "dbt_image_2",
-        "JOB_NAME": "dbt-test-2",
+        "JOB_NAME": "dbttest-job2",
+        "WORKFLOW_NAME": "dbttest-orchestrator-job2",
         "DBT_MODEL_SELECTOR": "test_proj_2",
-    },
+    }
 }
 
 
